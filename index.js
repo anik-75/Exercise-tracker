@@ -68,7 +68,7 @@ app.post("/api/users/:_id/exercises", async function (req, res) {
           username: user.username,
           duration: exercise.duration,
           description: exercise.description,
-          date: exercise.date.toDateString()
+          date: exercise.date.toDateString(),
         });
       }
     } else {
@@ -78,6 +78,40 @@ app.post("/api/users/:_id/exercises", async function (req, res) {
     }
   } catch (err) {
     res.json(err);
+  }
+});
+
+// @ get route   /api/users/:_id/logs?[from][&to][&limit]
+app.get("/api/users/:_id/logs", async function (req, res) {
+  let id = req.params["_id"];
+  let { from, to, limit } = req.query;
+  try {
+    let user = await User.findById(id);
+    let logs = await Exercise.find({
+      user_id: id,
+      date: {
+        $gte: from,
+        $lte: to,
+      },
+    }).limit(limit);
+    let log = [];
+    logs.map((exerciseLog) => {
+      let { duration, description, date } = exerciseLog;
+      log.push({
+        description,
+        duration,
+        date: date.toDateString(),
+      });
+    });
+
+    res.json({
+      username: user.username,
+      count: log.length,
+      _id: user.id,
+      log,
+    });
+  } catch (error) {
+    res.json(error);
   }
 });
 
