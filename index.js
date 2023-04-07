@@ -85,15 +85,22 @@ app.post("/api/users/:_id/exercises", async function (req, res) {
 app.get("/api/users/:_id/logs", async function (req, res) {
   let id = req.params["_id"];
   let { from, to, limit } = req.query;
+  let filter = {
+    user_id: id,
+  };
+  let dateObj = {};
+  if (from) {
+    dateObj["$gte"] = new Date(from);
+  }
+  if (to) {
+    dateObj["$lte"] = new Date(to);
+  }
+  if (from || to) {
+    filter.date = dateObj;
+  }
   try {
     let user = await User.findById(id);
-    let logs = await Exercise.find({
-      user_id: id,
-      date: {
-        $gte: from,
-        $lte: to,
-      },
-    }).limit(limit);
+    let logs = await Exercise.find(filter).limit(limit ?? 500);
     let log = [];
     logs.map((exerciseLog) => {
       let { duration, description, date } = exerciseLog;
